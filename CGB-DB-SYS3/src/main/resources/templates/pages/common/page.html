@@ -1,0 +1,57 @@
+<ul class="pagination pagination-sm no-margin pull-right">
+	<li><a class="first">首页</a></li>
+	<li><a class="pre">上一页</a></li>
+	<li><a class="next">下一页</a></li>
+	<li><a class="last">尾页</a></li>
+	<li><a class="rowCount">总记录数(0)</a></li>
+	<li><a class="pageCount">总页数(0)</a></li>
+	<li><a class="pageCurrent">当前页(1)</a></li>
+</ul>
+<script type="text/javascript">
+	$(function() {
+		//在pagid对应的对象上注册click时间,当点击此对象的子元素时执行函数doJumpToPage
+		$("#pageId").on("click", ".first,.pre,.next,.last", doJumpToPage)
+	})
+	function doSetPagination(page) {
+		$(".rowCount").html("总记录数(" + page.rowCount + ")");
+		$(".pageCount").html("总页数(" + page.pageCount + ")");
+		$(".pageCurrent").html("当前页(" + page.pageCurrent + ")");
+		//jquery中的数据绑定函数,当有key和value时为绑定 只有key时为获取
+		$("#pageId").data("pageCurrent", page.pageCurrent);
+		$("#pageId").data("pageCount", page.pageCount);
+	}
+	function doJumpToPage() {
+		
+		//prop(...)为jQuery中操作对象属性的一个函数
+		//prop(key,[value]);有value时为赋值操作,key必须为属性名
+		var cls = $(this).prop("class");
+		var pageCurrent = $("#pageId").data("pageCurrent");
+		var pageCount = $("#pageId").data("pageCount");
+		/* console.log("class",cls); */
+		if (cls == "first") {
+			pageCurrent = 1;
+		} else if (cls == "last") {
+			pageCurrent = pageCount;
+		} else if (cls == "pre") {
+			if (pageCurrent > 1) {
+				pageCurrent--;
+			}
+		} else if (cls == "next") {
+			if (pageCurrent < pageCount) {
+				pageCurrent++;
+			}
+		} else {
+			return;
+		}
+		$("#pageId").data("pageCurrent", pageCurrent);
+		doGetObjects();
+	}
+</script>
+
+
+
+
+
+
+
+

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.cy.pj.jtsys.dao.SysMenuDao">
+  		<select id="findObjects"  resultType="map">
+  				<!-- 方案一 -->
+  				select c.*,p.name parentName 
+  				 from sys_menus c left  join sys_menus p on c.parentId=p.Id
+  				 <!-- 方案二
+          select c.*,(
+                    select p.name 
+                    from sys_menus p
+                    where c.parentId=p.id
+                    ) parentName
+          from sys_menus c
+   方案1和2哪个性能好需要看用的是哪个数据库(与数据库的优化有关)--> 
+  		</select>
+  		<insert id="insertObject"  parameterType="com.cy.pj.jtsys.entity.SysMenu">
+  				insert into sys_menus
+          (name,url,type,sort,note,parentId,permission,
+createdTime,modifiedTime,createdUser,modifiedUser)
+          values
+          (#{name},#{url},#{type},#{sort},#{note},#{parentId},
+#{permission},now(),now(),#{createdUser},#{modifiedUser})
+  		</insert>
+  		<update id="updateObject"
+            parameterType="com.cy.pj.jtsys.entity.SysMenu">
+         update sys_menus
+         set
+           name=#{name},
+           type=#{type},
+           sort=#{sort},
+           url=#{url},
+           parentId=#{parentId},
+           permission=#{permission},
+           modifiedUser=#{modifiedUser},
+           modifiedTime=now()
+        where id=#{id}
+    </update>
+  </mapper>

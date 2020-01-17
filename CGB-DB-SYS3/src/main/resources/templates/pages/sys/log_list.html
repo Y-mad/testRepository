@@ -1,0 +1,166 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">日志管理</h3>
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="用户名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+                                <i class="fa fa-search"></i>
+							</button>
+							<button type="button" class="btn btn-default btn-delete">删除</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+						    <th><input type="checkbox" id="checkAll">全选</th>
+							<th>用户名</th>
+							<th>操作</th>
+							<th>请求方法</th>
+							<th>请求参数</th>
+							<th>IP</th>
+							<th>执行时长</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId">
+					    <tr>
+					       <td colspan="7">数据正在加载中...</td>
+					    </tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="pageId" class="box-footer clearfix">
+			
+			</div>
+			<!-- /.box-body -->
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript">
+ /*   $.ajax({
+	   url: ""
+	   type: "GET"
+	   success: function(result){
+		   
+	   }
+   }) */
+   $(function(){
+	$("#pageId").load("doPageUI",doGetObjects);
+	//这里的doGetObjects如果不写在里面而在下面调用doGetObjects();的话可能会导致
+	//doGetObjects();方法产生的数据已加载而doPageUI的页面还未加载完成
+	//(这里也可以通过在该页面需要被加载到的地方用thymeleaf标签将整个页面加载过去)
+	$(".input-group-btn").on("click",".btn-search",doQueryObjects);
+	$(".input-group-btn").on("click",".btn-delete",doDeleteObjects);
+	$("#checkAll").change(doChangeTbodyChexBoxState);
+	$("#tbodyId").on("change",".cBox",doChangeTHeadCheckBoxState)
+});
+ //全选时全选框默认选中
+ function doChangeTHeadCheckBoxState(){
+	 var flag=true;
+	 $("#tbodyId input[type='checkbox']").each(function(){
+		 flag=flag&&$(this).prop("checked");
+	 });
+	//3.修改全选元素checkbox的值为flag
+	  $("#checkAll").prop("checked",flag);
+ }
+ //根据全选框状态改变复选框的状态
+ function doChangeTbodyChexBoxState(){
+	 //获取全选框的checked值
+	 var flag=$(this).prop("checked");
+	 //基于全选框来更改单个checkbox的状态
+	 $("#tbodyId input[type='checkbox']").prop("checked",flag);
+ }
+ function doGetCheckedIds(){
+	 var idArray=[];
+	 $("#tbodyId input[type='checkbox']").each(function (){
+		 if($(this).prop("checked")){//每个复选框都会有checked值,在选中时为true
+			 idArray.push($(this).val());
+		 }
+	 });return idArray;
+ }
+ function doDeleteObjects(){
+	 //获取选中的id记录
+	 var idArray=doGetCheckedIds();
+	 if(!idArray&&idArray.length==0){
+		 alert("请先选择");
+		 return;
+	 }
+	 //提示是否选择删除
+	 if(!confirm("确定删除吗")) return;
+	 //发送ajax异步请求执行删除
+	 var url="log/deleteObjects";
+	 var parms={"ids": idArray.toString()};
+	 $.post(url,parms,function(result){
+		 	if(result.state==1){
+		 		alert(result.message);
+		 		doGetObjects();
+		 	}else{
+		 		alert(result.message);
+		 	}
+	 })
+ }
+ function doQueryObjects(){
+	//为什么要在此位置初始化pageCurrent的值为1?
+	   //数据查询时页码的初始位置也应该是第一页
+	   $("#pageId").data("pageCurrent",1);
+	   //为什么要调用doGetObjects函数？
+	   //重用js代码，简化jS代码编写。
+	   doGetObjects();
+ }
+ function doGetObjects(){
+	 //初始化全选框的状态
+	 $("#checkAll").prop("checked",false);
+   var url="log/findPageObjects";
+   var pageCurrent = $("#pageId").data("pageCurrent");
+   if(!pageCurrent) pageCurrent=1;
+   //传名字参数
+   var params={"pageCurrent":pageCurrent};
+   var username=$("#searchNameId").val();
+   //如下语句的含义是什么？动态在js对象中添加key/value,
+   if(username) params.username=username;//查询时需要
+   //将参数传到服务端
+  	 $.getJSON(url,params,doHandleResponseJsonResult);
+}
+   function doHandleResponseJsonResult(result){
+	   if(result.state==1){
+	   doSetTableBodyRows(result.data.records);//Result.data为pageObject对象对应的信息
+   		 doSetPagination(result.data);
+   	 }else{alert(result.message);}
+    }
+    function doSetTableBodyRows(records){//[{},{},{}]
+	    //迭代records记录,并构建html元素对象(tr,td)
+	    let trs="";//ES6
+	    //for(let i=0;i<records.length;i++){}//ES5
+	    //for(let i in records){}//ES5
+	    //ES6中迭代数组的一种方式,如下:
+	    records.forEach((item)=>{//item表示records中的一行对象
+			   trs+="<tr>"+
+		          "<td><input type='checkbox' class='cBox' value='"+item.id+"'></td>"+
+		          "<td>"+item.username+"</tdo>"+
+		          "<td>"+item.operation+"</td>"+
+		          "<td>"+item.method+"</td>"+
+		          "<td>"+item.params+"</td>"+
+		          "<td>"+item.ip+"</td>"+
+		          "<td>"+item.time+"</td>"+
+		        "</tr>"
+		});
+	    //将Html元素追加到tbody中
+	    $("#tbodyId").html(trs);
+   }
+</script>
+
+
+
+
+
+
